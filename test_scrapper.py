@@ -18,7 +18,7 @@ class TestUdemyScrapper(unittest.TestCase):
         """
         Check if it's possible to get categories
         """
-        categories = scrapper.get_categories(self.page)
+        categories = scrapper.get_categories(self.page, 10)
         self.assertIsNotNone(categories)
 
     def test_convert_category_info_to_object(self):
@@ -41,7 +41,7 @@ class TestUdemyScrapper(unittest.TestCase):
             Pseudocategory('/courses/it-and-software/', "Compus")
         ]
         with patch('bs4.BeautifulSoup.select', return_value=hyp_categories):
-            categories = scrapper.get_categories(self.page)
+            categories = scrapper.get_categories(self.page, 4)
             self.assertEqual(len(categories), 2)
             self.assertEqual(type(categories["Compus"].maxpages), int)
             self.assertEqual(type(categories["Disenito"].maxpages), int)
@@ -54,10 +54,14 @@ class TestUdemyScrapper(unittest.TestCase):
         """
         We check a category with 4 pages
         """
-        c = Category("compus", "https://www.udemy.com/courses/development/")
-        c.maxpages = 4
         browser = webdriver.Chrome(executable_path=r'chromedriver.exe')
         browser.implicitly_wait(10)
+        c = Category(
+            "compus",
+            "https://www.udemy.com/courses/development/",
+            4,
+            browser
+            )
         with patch('models.Category._get_datetime_now', return_value="test1"):
             c.get_courses(browser)
         self.assertTrue(path.exists("files_test1/courses_compus_1.csv"))

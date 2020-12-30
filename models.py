@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class Category:
-    def __init__(self, name, url, browser=None):
+    def __init__(self, name, url, pages_limit, browser=None):
         self.name = name
         self.url = url
         logging.info("Checking category {} in url {}".format(
@@ -19,9 +19,12 @@ class Category:
         )
         if browser:
             browser.get(self.url)
-            self.maxpages = int(browser.find_elements_by_class_name(
+            existing_pages = int(browser.find_elements_by_class_name(
                 "pagination--page--3FKqV"
                 )[-1].text)
+            self.maxpages = (
+                pages_limit if pages_limit <= existing_pages
+                else existing_pages)
         else:
             self.maxpages = 1
         self.pending = self.maxpages

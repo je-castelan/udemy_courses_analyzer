@@ -3,6 +3,7 @@ import requests
 from selenium import webdriver
 import threading
 import logging
+import argparse
 
 from models import Category
 
@@ -10,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def get_categories(webpage):
+def get_categories(webpage, limit_pages):
     """
     In this page, we get the main categories of the webpage inserted
     """
@@ -26,6 +27,7 @@ def get_categories(webpage):
         dict_categories[name] = Category(
             name,
             webpage + category['href'],
+            limit_pages,
             browser
             )
     logging.info('Categories obtanied. {} categories in total'.format(
@@ -53,17 +55,32 @@ if __name__ == "__main__":
     """
     Main function
     """
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--pages",
+        help="Give a page limit to consult for every category",
+        type=int)
     page = "http://www.udemy.com"
-    categories = get_categories(page)
-    threads = list()
-    maxpages = 0
-    for category, objCategory in categories.items():
-        logger.info("Opening browser to check {} category".format(category))
-        maxpages += objCategory.maxpages
-        browser = webdriver.Chrome(executable_path=r'chromedriver.exe')
-        browser.implicitly_wait(10)
-        t = threading.Thread(target=objCategory.get_courses, args=(browser,))
-        threads.append(objCategory)
-        t.start()
-    c = threading.Thread(target=counter, args=(threads, maxpages))
-    c.start()
+    args = parser.parse_args()
+    if not args.pages:
+        logger.error("Page limit is not defined. Finishing")
+        print("It's mandatory to assign a page limit")
+    else:
+        categories = get_categories(page, args.pages)
+        threads = list()
+        maxpages = 0
+        for category, objCategory in categories.items():
+            logger.info("Opening browser to check {} category".format(
+                category
+                ))
+            maxpages += objCategory.maxpages
+            browser = webdriver.Chrome(executable_path=r'chromedriver.exe')
+            browser.implicitly_wait(10)
+            t = threading.Thread(
+                target=objCategory.get_courses,
+                args=(browser,)
+                )
+            threads.append(objCategory)
+            t.start()
+        c = threading.Thread(target=counter, args=(threads, maxpages))
+        c.start()

@@ -2,3 +2,5 @@ bs4==0.0.1
 requests>=2.19.0,<=2.25.1
 selenium==3.141.0
 flake8>=3.6.0,<3.7.0
+numpy==1.19.3
+pandas==1.2.0
